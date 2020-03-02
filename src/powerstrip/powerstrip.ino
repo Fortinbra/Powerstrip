@@ -1,6 +1,8 @@
+#include <TimeLib.h>
+
+#include <RTCZero.h>
 #include <MQTT.h>
 #include <MQTTClient.h>
-
 #include <NTPClient.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
@@ -14,53 +16,43 @@ File settings;
 EthernetClient net;
 MQTTClient client;
 RTCZero rtc;
-DNSClient dns;
 
-const int timeZone = -6;
+
 unsigned int localPort = 8888;
-unsigned long lastMillis = 0;
-
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
-  const char* timeServerURL = "pool.ntp.org";
+  
   Serial.println("Initialize Ethernet with DHCP");
   bool success = true;
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
     if (Ethernet.hardwareStatus() == EthernetNoHardware) {
       Serial.println("Ethernet shield was not found. Sorry, that's kinda important here.");
-    } else if (Ethernet.linkStatus() == LinkOFF{
+    } else if (Ethernet.linkStatus() == LinkOFF){
     Serial.println("Ethernet cable is unplugged");
     }
     success = false;
   }
-  if (!success) {
+  if (success) {
     Serial.print("My IP address: ");
     Serial.println(Ethernet.localIP());
-    dns.begin(Ethernet.dnsServerIP());
-    if (dns.getHostByName(timeServerURL, timeServer) == 1) {
-      Serial.print(F("ntp = "));
-      Serial.println(timeServer);
-    }
-    else Serial.print(F("dns lookup failed"));
-    Udp.begin(localPort);
+    Serial.println(Ethernet.gatewayIP());
+    Serial.println(Ethernet.dnsServerIP());
+    Serial.println(Ethernet.subnetMask());
+    timeClient.begin();
     Serial.println("waiting for sync");
-
+    time_t epoch = timeClient.getEpochTime();
     rtc.begin();
     rtc.setTime(hour(), minute(), second());
     rtc.setDate(day(), month(), year());
-
+    Serial.println(rtc.getHours());
     client.begin("certifiedglutenfree", net);
     client.onMessage(messageReceived);
 
     connect();
   }
-  timeClient.begin();
 }
-
-
-
 
 void loop() {
   client.loop();

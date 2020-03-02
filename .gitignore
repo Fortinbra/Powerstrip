@@ -6,6 +6,7 @@
 *.ko
 *.obj
 *.elf
+*.bin
 
 # Linker output
 *.ilk
@@ -41,6 +42,9 @@
 *.su
 *.idb
 *.pdb
+
+# Visual Studio Files
+.vscode/
 
 # Kernel Module Compile Results
 *.mod*
