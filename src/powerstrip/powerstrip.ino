@@ -1,3 +1,5 @@
+#include <ArduinoJson.h>
+
 #include <TimeLib.h>
 
 #include <RTCZero.h>
@@ -19,20 +21,25 @@ RTCZero rtc;
 
 
 unsigned int localPort = 8888;
+
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
-  
+  while (!Serial);
   Serial.println("Initialize Ethernet with DHCP");
-  bool success = true;
-  if (Ethernet.begin(mac) == 0) {
-    Serial.println("Failed to configure Ethernet using DHCP");
-    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-      Serial.println("Ethernet shield was not found. Sorry, that's kinda important here.");
-    } else if (Ethernet.linkStatus() == LinkOFF){
-    Serial.println("Ethernet cable is unplugged");
+  bool success = false;
+  while (!success) {
+    if (Ethernet.begin(mac) == 0) {
+      Serial.println("Failed to configure Ethernet using DHCP");
+      if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+        Serial.println("Ethernet shield was not found. Sorry, that's kinda important here.");
+      } else if (Ethernet.linkStatus() == LinkOFF) {
+        Serial.println("Ethernet cable is unplugged");
+      }
+      success = false;
+    } else {
+      success = true;
     }
-    success = false;
   }
   if (success) {
     Serial.print("My IP address: ");
@@ -47,17 +54,17 @@ void setup() {
     rtc.setTime(hour(), minute(), second());
     rtc.setDate(day(), month(), year());
     Serial.println(rtc.getHours());
-    client.begin("certifiedglutenfree", net);
-    client.onMessage(messageReceived);
-
-    connect();
+//    client.begin("certifiedglutenfree", net);
+//    client.onMessage(messageReceived);
+//
+//    connect();
   }
 }
 
 void loop() {
   client.loop();
   if (!client.connected()) {
-    connect();
+
   }
   maintainEthernet();
   timeClient.update();
